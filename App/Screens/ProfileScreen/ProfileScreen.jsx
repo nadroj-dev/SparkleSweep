@@ -1,10 +1,15 @@
-import { View, Text, Image, FlatList, TouchableOpacity } from 'react-native';
+import { View, Text, Image, FlatList, TouchableOpacity, Alert } from 'react-native';
 import React from 'react';
 import { Ionicons } from '@expo/vector-icons';
-import { useUser } from '@clerk/clerk-expo';
+import { useUser, useClerk } from '@clerk/clerk-expo';
 import Colors from '../../Utils/Colors';
+import { useNavigation } from '@react-navigation/native';
+
 export default function ProfileScreen() {
   const { user } = useUser();
+  const { signOut } = useClerk();
+  const navigation = useNavigation();
+
   const profileMenu = [
     {
       id: 1,
@@ -22,6 +27,32 @@ export default function ProfileScreen() {
       icon: 'log-out',
     },
   ];
+
+  const handleLogout = async () => {
+    try {
+      Alert.alert(
+        'Logout',
+        'Are you sure you want to logout?',
+        [
+          {
+            text: 'Cancel',
+            style: 'cancel',
+          },
+          {
+            text: 'Logout',
+            onPress: async () => {
+              await signOut();
+              navigation.replace('Login');
+            },
+            style: 'destructive',
+          },
+        ],
+        { cancelable: false }
+      );
+    } catch (err) {
+      console.error('Logout error', err);
+    }
+  };
 
   return (
     <View>
@@ -57,8 +88,10 @@ export default function ProfileScreen() {
       <View style={{ paddingTop: 50 }}>
         <FlatList
           data={profileMenu}
-          renderItem={({ item, index }) => (
+          keyExtractor={(item) => item.id.toString()}
+          renderItem={({ item }) => (
             <TouchableOpacity
+              onPress={item.name === 'Logout' ? handleLogout : null}
               style={{
                 display: 'flex',
                 flexDirection: 'row',
